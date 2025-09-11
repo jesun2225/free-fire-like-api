@@ -9,9 +9,9 @@ from config import URLS_INFO ,URLS_LIKE,FILES
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 app = Flask(__name__)
 
-def load_tokens(server):
+def load_tokens(server_name):
     files = FILES
-    return json.load(open(f"tokens/{files.get(server,'token_bd.json')}"))
+    return json.load(open(f"tokens/{files.get(server_name,'token_bd.json')}"))
 
 def get_headers(token):
     return {
@@ -43,32 +43,32 @@ async def send(token, url, data):
     async with aiohttp.ClientSession() as s:
         async with s.post(url, data=bytes.fromhex(data), headers=headers) as r: return await r.text() if r.status==200 else None
 
-async def multi(uid, server, url):
-    enc = encrypt_message(create_like(uid, server))
-    tokens = load_tokens(server)
+async def multi(uid, server_name, url):
+    enc = encrypt_message(create_like(uid, server_name))
+    tokens = load_tokens(server_name)
     return await asyncio.gather(*[send(tokens[i%len(tokens)]['token'], url, enc) for i in range(105)])
 
-def get_info(enc, server, token):
+def get_info(enc, server_name, token):
     urls =URLS_INFO
-    r = requests.post(urls.get(server,"https://clientbp.ggblueshark.com/GetPlayerPersonalShow"),
+    r = requests.post(urls.get(server_name,"https://clientbp.ggblueshark.com/GetPlayerPersonalShow"),
                       data=bytes.fromhex(enc), headers=get_headers(token), verify=False)
     try: p = like_count_pb2.Info(); p.ParseFromString(r.content); return p
     except DecodeError: return None
 
 @app.route("/like")
 def like():
-    uid, server = request.args.get("uid"), request.args.get("server","").upper()
-    if not uid or not server: return jsonify(error="UID and server required"),400
-    tokens = load_tokens(server); enc = encrypt_message(create_uid(uid))
+    uid, server_name = request.args.get("uid"), request.args.get("server_name","").upper()
+    if not uid or not server_name: return jsonify(error="UID and server_name required"),400
+    tokens = load_tokens(server_name); enc = encrypt_message(create_uid(uid))
     before, tok = None, None
     for t in tokens[:10]:
-        before = get_info(enc, server, t["token"])
+        before = get_info(enc, server_name, t["token"])
         if before: tok = t["token"]; break
     if not before: return jsonify(error="Player not found"),500
     before_like = int(json.loads(MessageToJson(before)).get('AccountInfo',{}).get('Likes',0))
     urls =URLS_LIKE
-    asyncio.run(multi(uid, server, urls.get(server,"https://clientbp.ggblueshark.com/LikeProfile")))
-    after = json.loads(MessageToJson(get_info(enc, server, tok)))
+    asyncio.run(multi(uid, server_name, urls.get(server_name,"https://clientbp.ggblueshark.com/LikeProfile")))
+    after = json.loads(MessageToJson(get_info(enc, server_name, tok)))
     after_like = int(after.get('AccountInfo',{}).get('Likes',0))
     return jsonify({
         
@@ -96,5 +96,5 @@ if __name__ == "__main__":
 
 
     
-#URL_ENPOINTS ="http://127.0.0.1:5000/like?uid=13002831333&server=me"
+#URL_ENPOINTS ="http://127.0.0.1:5000/like?uid=13002831333&server_name=me"
 #credits : "https://great.thug4ff.com/"
