@@ -58,7 +58,7 @@ def get_info(enc, server_name, token):
 @app.route("/like")
 def like():
     uid, server_name = request.args.get("uid"), request.args.get("server_name","").upper()
-    if not uid or not server_name: return jsonify(error="UID and server_name required"),400
+    if not uid or not server_name: return jsonify(error="UID and server_name are required"),400
     tokens = load_tokens(server_name); enc = encrypt_message(create_uid(uid))
     before, tok = None, None
     for t in tokens[:10]:
