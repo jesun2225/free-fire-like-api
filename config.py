@@ -18,5 +18,6 @@ URLS_INFO = {"IND":"https://client.ind.freefiremobile.com/GetPlayerPersonalShow"
 FILES = {"IND":"token_ind.json",
              "BR":"token_br.json",
              "US":"token_br.json",
+             "BD": "token_bd.json",
              "SAC":"token_br.json",
              "NA":"token_br.json"}
