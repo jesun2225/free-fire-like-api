@@ -19,4 +19,4 @@ FILES = {"IND":"token_ind.json",
              "BR":"token_br.json",
              "US":"token_br.json",
              "SAC":"token_br.json",
-             "NA":"token_br.json"}
+             "NA":"token_bd.json"}
